@@ -3,14 +3,17 @@
 docker stop my-html-web || true
 docker rm my-html-web || true
 
-# 2. 安全搬運：清空舊數據，確保把工廠拉下來的最新專案網頁塞進 dio-web-pool
-# 💡 加上 rm -rf /to/*，先把 Nginx 可能偷偷塞進去的歡迎頁屍體徹底炸毀！
+# 2. 物理毀滅：直接把舊的保險箱炸毀！徹底清除所有可能殘留的 Nginx 歡迎頁
+docker volume rm dio-web-pool || true
+docker volume create dio-web-pool
+
+# 3. 安全搬運：把 Jenkins 拉下來的專案網頁，灌進這個保鮮期 100% 全新的保險箱
 docker run --rm \
   -v /var/jenkins_home/workspace/dio-html-pipeline/:/from \
   -v dio-web-pool:/to \
-  alpine sh -c "rm -rf /to/* && cp -r /from/* /to/"
+  alpine sh -c "cp -r /from/* /to/"
 
-# 3. 點火重生：以標準平民安全模式啟動，抱住乾淨的 dio-web-pool
+# 4. 點火重生：以標準平民安全模式啟動，抱住絕對純淨的 dio-web-pool
 docker run -d \
   --name my-html-web \
   -p 80:80 \
