@@ -3,15 +3,17 @@
 docker stop my-html-web || true
 docker rm my-html-web || true
 
-# 2. 安全搬運：把工廠拉下來的東西，搬到對外的 /var/web_code
-cp -r /var/jenkins_home/workspace/dio-html-pipeline/* /var/web_code/
+# 2. 安全搬運：直接把 Jenkins 拉下來的網頁，丟進 Docker 託管的獨立保險箱（dio-web-pool）
+# 💡 這樣做，完全繞開了宿主機實體資料夾的 700 權限阻擋！
+docker run --rm \
+  -v /var/jenkins_home/workspace/dio-html-pipeline/:/from \
+  -v dio-web-pool:/to \
+  alpine sh -c "cp -r /from/* /to/"
 
-# 3. 終極點火：讓 Nginx 用平民身分（1000）去聽它內部的 8080 埠！
-# 💡 這樣它既能跨進 700 的大門，又不會因為搶 80 埠而暴斃！
-# 💡 注意看連接埠映射變成了：-p 80:8080 (外面依然是80，裡面走8080)
+# 3. Nginx 點火：用標準平民模式啟動，直接抱住 dio-web-pool 保險箱
+# 💡 沒開 --user root！走標準 -p 80:80！完全不破壞宿主機 700 權限！
 docker run -d \
   --name my-html-web \
-  --user 1000:1000 \
-  -p 80:8080 \
-  -v /home/ubuntu/dio_company_center/web_code:/usr/share/nginx/html \
+  -p 80:80 \
+  -v dio-web-pool:/usr/share/nginx/html \
   nginx:alpine
