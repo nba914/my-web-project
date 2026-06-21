@@ -10,6 +10,7 @@ cp -r /var/jenkins_home/workspace/dio-html-pipeline/* /var/web_code/
 # 3. 啟動 Nginx：讓 Nginx 抱住宿主機實體的 web_code
 docker run -d \
   --name my-html-web \
+  --user 1000:1000 \
   -p 80:80 \
   -v /home/ubuntu/dio_company_center/web_code:/usr/share/nginx/html \
   nginx:alpine
